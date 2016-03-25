@@ -13,10 +13,11 @@ except ImportError:
     import pickle
 
 from libcloud.compute.base import NodeImage, NodeLocation, NodeSize
+from libcloud.compute.drivers.azure import AzureNodeLocation
 from libcloud.compute.drivers.ec2 import EC2NodeLocation
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 # Types which can be easily serialised
 normal_types = (DictType, ListType, TupleType, BooleanType, FloatType,
