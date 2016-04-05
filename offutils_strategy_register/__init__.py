@@ -17,7 +17,7 @@ from libcloud.compute.drivers.azure import AzureNodeLocation
 from libcloud.compute.drivers.ec2 import EC2NodeLocation
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 # Types which can be easily serialised
 normal_types = (DictType, ListType, TupleType, BooleanType, FloatType,
@@ -40,12 +40,12 @@ def node_to_dict(node):
     node_d['driver'] = (lambda s: s[s.find("'") + 1:s.rfind("'")])(str(type(node.driver)))
 
     if hasattr(node, 'extra') and node.extra:
-        node_d['extra'] = {k: v for k, v in node.extra.iteritems()
-                           if k not in ('secret', 'key') and v}
         if 'network_interfaces' in node_d['extra'] and node_d['extra']['network_interfaces']:
             node_d['extra']['network_interfaces'] = [
                 {'name': interface.name, 'id': interface.id}
                 for interface in node_d['extra']['network_interfaces']]
+        node_d['extra'] = {k: v for k, v in node.extra.iteritems()
+                           if k not in ('secret', 'key') and type(v) in normal_types}
     return node_d
 
 
