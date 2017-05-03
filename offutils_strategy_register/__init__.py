@@ -15,6 +15,7 @@ except ImportError:
 from libcloud.compute.base import NodeImage, NodeLocation, NodeSize
 # TODO: Automatically import the right ones rather than listing:
 from libcloud.compute.drivers.azure import AzureNodeLocation
+from libcloud.compute.drivers.azure_arm import AzureImage, AzureNodeDriver
 from libcloud.compute.drivers.ec2 import EC2NodeLocation
 from libcloud.compute.drivers.vagrant import VagrantNodeDriver
 
