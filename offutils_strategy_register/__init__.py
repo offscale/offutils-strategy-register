@@ -12,15 +12,22 @@ try:
 except ImportError:
     import pickle
 
-from libcloud.compute.base import NodeImage, NodeLocation, NodeSize
+from libcloud.compute.base import NodeImage, NodeLocation, NodeSize, Node
+from libcloud.compute.providers import get_driver
 # TODO: Automatically import the right ones rather than listing:
 from libcloud.compute.drivers.azure import AzureNodeLocation
 from libcloud.compute.drivers.azure_arm import AzureImage, AzureNodeDriver
 from libcloud.compute.drivers.ec2 import EC2NodeLocation
 from libcloud.compute.drivers.vagrant import VagrantNodeDriver
 
+from offutils import update_d
+
 __author__ = 'Samuel Marks'
-__version__ = '0.0.6'
+__version__ = '0.0.7'
+
+# Namedtuples
+MarshallLoads = namedtuple('MarshallLoads', 'loads')
+KeyVal = namedtuple('KeyVal', 'key value')
 
 # Types which can be easily serialised
 normal_types = (DictType, ListType, TupleType, BooleanType, FloatType,
@@ -61,12 +68,21 @@ def node_to_dict(node):
 
 def dict_to_node(d):
     assert type(d) is DictType
+
+    if 'driver_cls' not in d:
+        d['driver_cls'] = get_driver(d['extra']['provider'])
+        d['_class'] = d['driver_cls'].__name__
+
     _class = d.pop('_class')
     driver_cls = d.pop('driver_cls')
     for key in 'get_uuid', 'uuid':
         d.pop(key, None)
-    d['driver'] = driver_cls
-    return globals()[_class](**d)
+    # d['driver'] = driver_cls
+
+    try:
+        return globals()[_class](**d)
+    except (TypeError, KeyError):
+        return Node(**(update_d(d, driver=driver_cls)))
 
 
 def dict_to_cls(d):
@@ -85,18 +101,18 @@ def print_dict_and_type(d):
         print 'key = \'{0}\', val = `{1}`, type = {2}'.format(key, val, type(val))
 
 
-def list_nodes(folder='unclustered', marshall=namedtuple('ident', 'loads')(lambda s: s), **client_kwargs):
+def list_nodes(folder='unclustered', marshall=MarshallLoads(lambda s: s), **client_kwargs):
     try:
-        return tuple(ifilter(None, imap(lambda d: namedtuple('_', 'key value')(d.key, marshall.loads(d.value)),
+        return tuple(ifilter(None, imap(lambda d: KeyVal(d.key, marshall.loads(d.value)),
                                         _get_client(**client_kwargs).read(folder, recursive=True).children)))
     except TypeError as e:
         if e.message == 'expected string or buffer':
             raise EtcdNotFile('"{folder}" etcd folder is empty'.format(folder=folder))
 
 
-def fetch_node(folder='unclustered', marshall=namedtuple('ident', 'loads')(lambda s: s), **client_kwargs):
+def fetch_node(folder='unclustered', marshall=MarshallLoads(lambda s: s), **client_kwargs):
     try:
-        return next(ifilter(None, imap(lambda d: namedtuple('_', 'key value')(d.key, marshall.loads(d.value)),
+        return next(ifilter(None, imap(lambda d: KeyVal(d.key, marshall.loads(d.value)),
                                        _get_client(**client_kwargs).read(folder, recursive=True).children)),
                     None)
     except TypeError as e:
