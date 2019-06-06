@@ -23,7 +23,7 @@ from libcloud.compute.drivers.vagrant import VagrantNodeDriver
 from offutils import update_d
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.7'
+__version__ = '0.0.8'
 
 # Namedtuples
 MarshallLoads = namedtuple('MarshallLoads', 'loads')
