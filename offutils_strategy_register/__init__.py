@@ -1,21 +1,10 @@
 #!/usr/bin/env python
 
-from types import (
-    DictType,
-    ListType,
-    TupleType,
-    BooleanType,
-    FloatType,
-    StringType,
-    UnicodeType,
-    IntType,
-    NoneType,
-    LongType,
-)
-
 from collections import namedtuple
-from importlib import import_module
-from etcd import Client, EtcdKeyNotFound, EtcdNotFile
+from operator import itemgetter
+
+import etcd3
+from libcloud.compute.types import NodeState
 
 try:
     import pickle as pickle
@@ -29,9 +18,8 @@ from libcloud.compute.providers import get_driver
 from libcloud.compute.drivers.azure import AzureNodeLocation
 from libcloud.compute.drivers.azure_arm import AzureImage, AzureNodeDriver
 from libcloud.compute.drivers.ec2 import EC2NodeLocation
-from libcloud.compute.drivers.vagrant import VagrantNodeDriver
 
-from offutils import update_d
+from offutils import update_d, pp
 
 __author__ = "Samuel Marks"
 __version__ = "0.0.8"
@@ -42,19 +30,17 @@ KeyVal = namedtuple("KeyVal", "key value")
 
 # Types which can be easily serialised
 normal_types = (
-    DictType,
-    ListType,
-    TupleType,
-    BooleanType,
-    FloatType,
-    StringType,
-    UnicodeType,
-    IntType,
-    NoneType,
-    LongType,
+    type(dict),
+    type(list),
+    type(tuple),
+    type(bool),
+    type(float),
+    type(str),
+    type(int),
+    type(None),
 )
 
-_get_client = lambda **kwargs: Client(**kwargs)
+_get_client = etcd3.client
 
 save_node_info = lambda node_name, node_info, folder="unclustered", marshall=pickle, **client_kwargs: _get_client(
     **client_kwargs
@@ -63,14 +49,12 @@ save_node_info = lambda node_name, node_info, folder="unclustered", marshall=pic
 )
 
 get_node_info = lambda node_name, folder="unclustered", marshall=pickle, **client_kwargs: marshall.loads(
-    _get_client(**client_kwargs)
-    .read("/".join((folder, node_name)))
-    .value.encode("utf8")
+    _get_client(**client_kwargs).get("/".join((folder, node_name))).value.encode("utf8")
 )
 
 obj_to_d = (
     lambda obj: obj
-    if type(obj) is DictType
+    if isinstance(obj, dict)
     else {k: getattr(obj, k) for k in dir(obj) if not k.startswith("_")}
 )
 
@@ -96,7 +80,7 @@ def node_to_dict(node):
         ):
             node_d["extra"]["network_interfaces"] = [
                 interface
-                if type(interface) is DictType
+                if isinstance(interface, dict)
                 else {"name": interface.name, "id": interface.id}
                 for interface in node_d["extra"]["network_interfaces"]
             ]
@@ -111,11 +95,14 @@ def node_to_dict(node):
 
 
 def dict_to_node(d):
-    assert type(d) is DictType
+    assert isinstance(d, dict)
 
     if "driver_cls" not in d:
         d["driver_cls"] = get_driver(d["extra"]["provider"])
         d["_class"] = d["driver_cls"].__name__
+
+    if "state" in d and isinstance(d["state"], (str, bytes)):
+        d["state"] = getattr(NodeState, d["state"].upper())
 
     _class = d.pop("_class")
     driver_cls = d.pop("driver_cls")
@@ -130,7 +117,7 @@ def dict_to_node(d):
 
 
 def dict_to_cls(d):
-    assert type(d) is DictType
+    assert isinstance(d, dict)
     _class = d.pop("_class")
     # if _class not in globals(): return import_module(_class)(**d)
     return _class(**d)
@@ -148,45 +135,36 @@ def print_dict_and_type(d):
 def list_nodes(
     folder="unclustered", marshall=MarshallLoads(lambda s: s), **client_kwargs
 ):
-    try:
-        return tuple(
-            filter(
-                None,
-                list(
-                    map(
-                        lambda d: KeyVal(d.key, marshall.loads(d.value)),
-                        _get_client(**client_kwargs)
-                        .read(folder, recursive=True)
-                        .children,
-                    )
-                ),
-            )
-        )
-    except TypeError as e:
-        if e.message == "expected string or buffer":
-            raise EtcdNotFile('"{folder}" etcd folder is empty'.format(folder=folder))
+    return list(_fetch_nodes(folder, marshall=marshall, **client_kwargs))
 
 
 def fetch_node(
     folder="unclustered", marshall=MarshallLoads(lambda s: s), **client_kwargs
 ):
-    try:
-        return next(
-            list(
-                filter(
-                    None,
-                    list(
+    return next(_fetch_nodes(folder, marshall=marshall, **client_kwargs))
+
+
+def _fetch_nodes(
+    folder="unclustered", marshall=MarshallLoads(lambda s: s), **client_kwargs
+):
+    _client = _get_client(**client_kwargs)
+    return map(
+        lambda _node: KeyVal("/".join((folder, _node.name)), _node),
+        map(
+            dict_to_node,
+            filter(
+                lambda _node: "public_ips" in _node,
+                (
+                    map(
+                        marshall.loads,
                         map(
-                            lambda d: KeyVal(d.key, marshall.loads(d.value)),
-                            _get_client(**client_kwargs)
-                            .read(folder, recursive=True)
-                            .children,
-                        )
-                    ),
-                )
+                            itemgetter(0),
+                            _client.get_prefix(
+                                folder[1:] if folder.startswith("/") else folder
+                            ),
+                        ),
+                    )
+                ),
             ),
-            None,
-        )
-    except TypeError as e:
-        if e.message == "expected string or buffer":
-            raise EtcdNotFile('"{folder}" etcd folder is empty'.format(folder=folder))
+        ),
+    )

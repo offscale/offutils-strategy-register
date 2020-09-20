@@ -40,7 +40,7 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 2.7",
         ],
         test_suite="tests",
-        install_requires=["python-etcd"],
+        install_requires=["etcd3"],
         packages=find_packages(),
         package_dir={package_name: package_name},
         data_files=[
