@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from collections import namedtuple
 from operator import itemgetter
 
@@ -9,6 +11,7 @@ except ImportError:
     import pickle
 
 from sys import version
+
 if version[0] == "2":
     from itertools import imap as map
 
@@ -127,13 +130,9 @@ def dict_to_cls(d):
     return _class(**d)
 
 
-def print_f(*args, **kwargs):
-    print((args, kwargs))
-
-
 def print_dict_and_type(d):
     for key, val in list(d.items()):
-        print(("key = '{0}', val = `{1}`, type = {2}".format(key, val, type(val))))
+        print("key = '{0}', val = `{1}`, type = {2}".format(key, val, type(val)))
 
 
 def list_nodes(

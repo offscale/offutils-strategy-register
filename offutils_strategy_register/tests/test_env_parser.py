@@ -2,6 +2,7 @@ from collections import deque
 from unittest import TestCase, main as unittest_main
 from os import environ
 from sys import version
+
 if version[0] == "2":
     from itertools import imap as map
 
@@ -28,7 +29,7 @@ class TestParseEnv(TestCase):
                 ),
                 input_strings,
             ),
-          maxlen=0
+            maxlen=0,
         )
 
     def test_env_edge_case(self):

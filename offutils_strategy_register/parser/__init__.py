@@ -1,5 +1,6 @@
 import json
 from sys import version
+
 if version[0] == "2":
     from itertools import imap as map
 
