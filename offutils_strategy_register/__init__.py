@@ -3,26 +3,26 @@
 from collections import namedtuple
 from operator import itemgetter
 
-import etcd3
-from libcloud.compute.types import NodeState
-
 try:
     import pickle as pickle
 except ImportError:
     import pickle
 
-from libcloud.compute.base import NodeImage, NodeLocation, NodeSize, Node
+import etcd3
+
+from libcloud.compute.base import Node
 from libcloud.compute.providers import get_driver
+from libcloud.compute.types import NodeState
 
 # TODO: Automatically import the right ones rather than listing:
 from libcloud.compute.drivers.azure import AzureNodeLocation
 from libcloud.compute.drivers.azure_arm import AzureImage, AzureNodeDriver
 from libcloud.compute.drivers.ec2 import EC2NodeLocation
 
-from offutils import update_d, pp
+from offutils import update_d
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.8"
+__version__ = "0.0.9"
 
 # Namedtuples
 MarshallLoads = namedtuple("MarshallLoads", "loads")
@@ -44,7 +44,7 @@ _get_client = etcd3.client
 
 save_node_info = lambda node_name, node_info, folder="unclustered", marshall=pickle, **client_kwargs: _get_client(
     **client_kwargs
-).set(
+).put(
     "/".join((folder, node_name)), marshall.dumps(node_info)
 )
 
@@ -75,7 +75,7 @@ def node_to_dict(node):
 
     if hasattr(node, "extra") and node.extra:
         if (
-            "network_interfaces" in node_d["extra"]
+            "network_interfaces" in node_d.get("extra", {})
             and node_d["extra"]["network_interfaces"]
         ):
             node_d["extra"]["network_interfaces"] = [
