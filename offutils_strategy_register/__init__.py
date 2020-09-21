@@ -4,9 +4,13 @@ from collections import namedtuple
 from operator import itemgetter
 
 try:
-    import pickle as pickle
+    import cPickle as pickle
 except ImportError:
     import pickle
+
+from sys import version
+if version[0] == "2":
+    from itertools import imap as map
 
 import etcd3
 

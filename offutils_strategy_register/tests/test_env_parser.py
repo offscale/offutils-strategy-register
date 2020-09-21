@@ -1,5 +1,9 @@
+from collections import deque
 from unittest import TestCase, main as unittest_main
 from os import environ
+from sys import version
+if version[0] == "2":
+    from itertools import imap as map
 
 from offutils_strategy_register.parser.env import parse_out_env
 
@@ -17,13 +21,14 @@ class TestParseEnv(TestCase):
             "",
             "env.",
         )
-        list(
+        deque(
             map(
                 lambda input_s: self.assertEqual(
                     parse_out_env(input_s), input_s.replace("env.bar", environ["bar"])
                 ),
                 input_strings,
-            )
+            ),
+          maxlen=0
         )
 
     def test_env_edge_case(self):
