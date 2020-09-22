@@ -16,7 +16,7 @@ def find_in_s(s, enumerable):
 
 
 def rfind_in_s(s, enumerable):
-    for i, c in reversed(list(enumerate(s))):
+    for i, c in reversed(tuple(enumerate(s))):
         if c in enumerable:
             return i
     return -1

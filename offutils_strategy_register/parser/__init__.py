@@ -1,6 +1,8 @@
 import json
 from sys import version
 
+from offutils.util import iteritems
+
 if version[0] == "2":
     from itertools import imap as map
 
@@ -15,21 +17,21 @@ def parse(config_filename):
             s = parse_out_env(f.read())
         strategy = json.loads(s.replace("\n", "").encode("string_escape"))
 
-        function_names = list(map(itemgetter(0), getmembers(inner, isfunction)))
+        function_names = tuple(map(itemgetter(0), getmembers(inner, isfunction)))
         return {
             k: (
                 lambda f_name: getattr(inner, f_name)(v)
                 if f_name in function_names
                 else v
             )(to_f_name(k))
-            for k, v in list(strategy.items())
+            for k, v in iteritems(strategy)
         }
 
     to_f_name = lambda f: "{f}_parse".format(f=f)
 
     inner.provider_parse = lambda provider: {
-        k: [{key.upper(): val for key, val in list(option.items())} for option in v]
-        for k, v in list(provider.items())
+        k: [{key.upper(): val for key, val in iteritems(option)} for option in v]
+        for k, v in iteritems(provider)
     }
 
     return inner()

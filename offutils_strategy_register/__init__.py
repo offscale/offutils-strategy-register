@@ -5,6 +5,8 @@ from __future__ import print_function
 from collections import namedtuple
 from operator import itemgetter
 
+from offutils.util import iteritems
+
 try:
     import cPickle as pickle
 except ImportError:
@@ -93,7 +95,7 @@ def node_to_dict(node):
             ]
         node_d["extra"] = {
             k: v
-            for k, v in list(node.extra.items())
+            for k, v in iteritems(node.extra)
             if k not in ("secret", "key") and type(v) in normal_types
         }
     if hasattr(node, "availability_zone"):
@@ -131,7 +133,7 @@ def dict_to_cls(d):
 
 
 def print_dict_and_type(d):
-    for key, val in list(d.items()):
+    for key, val in iteritems(d):
         print("key = '{0}', val = `{1}`, type = {2}".format(key, val, type(val)))
 
 
