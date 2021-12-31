@@ -1,7 +1,8 @@
 from collections import deque
-from unittest import TestCase, main as unittest_main
 from os import environ
 from sys import version
+from unittest import TestCase
+from unittest import main as unittest_main
 
 if version[0] == "2":
     from itertools import imap as map

@@ -1,6 +1,6 @@
-from os import environ
-from string import whitespace, punctuation, ascii_letters, digits
 from functools import reduce
+from os import environ
+from string import ascii_letters, digits, punctuation, whitespace
 
 _quotes = set("'\"")
 _whitespace_or_punctuation = set(

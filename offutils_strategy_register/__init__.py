@@ -18,17 +18,13 @@ if version[0] == "2":
     from itertools import imap as map
 
 import etcd3
-
 from libcloud.compute.base import Node
 from libcloud.compute.providers import get_driver
 from libcloud.compute.types import NodeState
+from offutils import update_d
 
 # TODO: Automatically import the right ones rather than listing:
-from libcloud.compute.drivers.azure import AzureNodeLocation
-from libcloud.compute.drivers.azure_arm import AzureImage, AzureNodeDriver
-from libcloud.compute.drivers.ec2 import EC2NodeLocation
 
-from offutils import update_d
 
 __author__ = "Samuel Marks"
 __version__ = "0.0.9"
