@@ -1,1 +1,2 @@
 https://api.github.com/repos/offscale/offutils/zipball#egg=offutils
+etcd3
