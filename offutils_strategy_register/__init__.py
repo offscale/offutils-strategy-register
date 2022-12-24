@@ -132,6 +132,9 @@ def node_to_dict(node):
         }
     if hasattr(node, "availability_zone"):
         node_d["availability_zone"] = obj_to_d(node.availability_zone)
+
+    if "connectionCls" in node_d:
+        del node_d["connectionCls"]
     return node_d
 
 
