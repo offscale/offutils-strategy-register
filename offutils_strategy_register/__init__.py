@@ -39,7 +39,7 @@ from offutils import update_d
 
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.10"
+__version__ = "0.0.11"
 
 # Namedtuples
 MarshallLoads = namedtuple("MarshallLoads", "loads")
