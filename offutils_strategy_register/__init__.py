@@ -40,6 +40,7 @@ from offutils import update_d
 
 __author__ = "Samuel Marks"
 __version__ = "0.0.11"
+__description__ = "Shared library (for offstrategy and offregister)"
 
 # Namedtuples
 MarshallLoads = namedtuple("MarshallLoads", "loads")
